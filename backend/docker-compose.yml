@@ -1,0 +1,49 @@
+version: "3.9"
+
+services:
+  api:
+    build: .
+    container_name: busuniversitario-api
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-postgres}@db:5432/${DB_NAME:-busuniversitario}
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./src:/usr/src/app/src
+    command: npm run dev
+    networks:
+      - busnet
+
+  db:
+    image: postgres:16-alpine
+    container_name: busuniversitario-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+      POSTGRES_DB: ${DB_NAME:-busuniversitario}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./db/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres} -d ${DB_NAME:-busuniversitario}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - busnet
+
+volumes:
+  pgdata:
+
+networks:
+  busnet:
+    driver: bridge
