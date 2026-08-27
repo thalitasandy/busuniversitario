@@ -67,6 +67,12 @@ function mapConfirmacao(row) {
     routeId: row.rota_id,
     date: row.data,
     sentido: row.sentido,
+    // presentes apenas quando a query fez JOIN com usuarios (findAll)
+    ...(row.aluno_nome !== undefined && {
+      studentName: row.aluno_nome,
+      studentMatricula: row.aluno_matricula,
+      studentCurso: row.aluno_curso,
+    }),
   };
 }
 

@@ -3,6 +3,7 @@ const { Router } = require("express");
 const controller = require("./ocorrencias.controller");
 const validate = require("../../middlewares/validate.middleware");
 const { authenticate, authorize } = require("../../middlewares/auth.middleware");
+const requireApproved = require("../../middlewares/require-approved.middleware");
 const { createOcorrenciaSchema, listQuerySchema } = require("./ocorrencias.validation");
 
 const router = Router();
@@ -62,6 +63,12 @@ router.use(authenticate);
  *             schema: { $ref: '#/components/schemas/Erro' }
  */
 router.get("/", validate(listQuerySchema, "query"), controller.list);
-router.post("/", authorize("motorista"), validate(createOcorrenciaSchema), controller.create);
+router.post(
+  "/",
+  authorize("motorista"),
+  requireApproved,
+  validate(createOcorrenciaSchema),
+  controller.create,
+);
 
 module.exports = router;

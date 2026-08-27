@@ -54,6 +54,10 @@ async function login(req, res, next) {
       throw new AppError("Credenciais inválidas.", 401);
     }
 
+    // Login é permitido mesmo com status "pendente"/"rejeitado" — o frontend usa isso
+    // para mostrar a tela de "cadastro em análise". As ações que exigem aprovação
+    // (confirmar presença, registrar ocorrência) são bloqueadas por `requireApproved`
+    // nas rotas dos respectivos módulos, não aqui.
     const token = signToken({ id: usuario.id, role: usuario.role });
 
     return res.json({ token, usuario: mapUsuario(usuario) });

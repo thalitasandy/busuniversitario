@@ -7,14 +7,16 @@ const { createRotaSchema, updateRotaSchema, idParamSchema } = require("./rotas.v
 
 const router = Router();
 
-router.use(authenticate);
-
 /**
  * @openapi
  * /rotas:
  *   get:
  *     tags: [Rotas]
  *     summary: Lista todas as rotas de ônibus
+ *     description: >
+ *       Pública (sem autenticação) — a tela de cadastro precisa exibir as rotas
+ *       disponíveis antes de o usuário ter uma conta.
+ *     security: []
  *     responses:
  *       200:
  *         description: Lista de rotas
@@ -57,7 +59,13 @@ router.use(authenticate);
  *             schema: { $ref: '#/components/schemas/Erro' }
  */
 router.get("/", controller.list);
-router.post("/", authorize("administrador"), validate(createRotaSchema), controller.create);
+router.post(
+  "/",
+  authenticate,
+  authorize("administrador"),
+  validate(createRotaSchema),
+  controller.create,
+);
 
 /**
  * @openapi
@@ -134,6 +142,7 @@ router.post("/", authorize("administrador"), validate(createRotaSchema), control
 router.get("/:id", validate(idParamSchema, "params"), controller.getById);
 router.patch(
   "/:id",
+  authenticate,
   authorize("administrador"),
   validate(idParamSchema, "params"),
   validate(updateRotaSchema),
@@ -141,6 +150,7 @@ router.patch(
 );
 router.delete(
   "/:id",
+  authenticate,
   authorize("administrador"),
   validate(idParamSchema, "params"),
   controller.remove,

@@ -3,6 +3,7 @@ const { Router } = require("express");
 const controller = require("./confirmacoes.controller");
 const validate = require("../../middlewares/validate.middleware");
 const { authenticate, authorize } = require("../../middlewares/auth.middleware");
+const requireApproved = require("../../middlewares/require-approved.middleware");
 const { confirmarSchema, listQuerySchema, idParamSchema } = require("./confirmacoes.validation");
 
 const router = Router();
@@ -62,7 +63,13 @@ router.use(authenticate);
  *             schema: { $ref: '#/components/schemas/Erro' }
  */
 router.get("/", validate(listQuerySchema, "query"), controller.list);
-router.post("/", authorize("aluno"), validate(confirmarSchema), controller.confirmar);
+router.post(
+  "/",
+  authorize("aluno"),
+  requireApproved,
+  validate(confirmarSchema),
+  controller.confirmar,
+);
 
 /**
  * @openapi

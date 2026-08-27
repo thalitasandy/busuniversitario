@@ -3,6 +3,7 @@ const { Router } = require("express");
 const controller = require("./notificacoes.controller");
 const validate = require("../../middlewares/validate.middleware");
 const { authenticate, authorize } = require("../../middlewares/auth.middleware");
+const requireApproved = require("../../middlewares/require-approved.middleware");
 const { createNotificacaoSchema, idParamSchema } = require("./notificacoes.validation");
 
 const router = Router();
@@ -26,7 +27,11 @@ router.use(authenticate);
  *               items: { $ref: '#/components/schemas/Notificacao' }
  *   post:
  *     tags: [Notificações]
- *     summary: Envia uma notificação (apenas administrador)
+ *     summary: Envia uma notificação (administrador, ou motorista para os alunos da própria rota)
+ *     description: >
+ *       Administradores definem `audience` e `routeId` livremente. Motoristas só podem
+ *       comunicar os alunos da própria rota — o backend ignora `audience`/`routeId`
+ *       enviados pelo motorista e força `audience = "aluno"` e `routeId` = rota do motorista.
  *     requestBody:
  *       required: true
  *       content:
@@ -52,7 +57,13 @@ router.use(authenticate);
  *             schema: { $ref: '#/components/schemas/Erro' }
  */
 router.get("/", controller.list);
-router.post("/", authorize("administrador"), validate(createNotificacaoSchema), controller.create);
+router.post(
+  "/",
+  authorize("administrador", "motorista"),
+  requireApproved,
+  validate(createNotificacaoSchema),
+  controller.create,
+);
 
 /**
  * @openapi

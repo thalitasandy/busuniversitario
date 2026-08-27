@@ -80,6 +80,9 @@ const options = {
             routeId: { type: "string", format: "uuid" },
             date: { type: "string", format: "date", example: "2026-08-26" },
             sentido: { type: "string", enum: ["ida", "volta", "ida-volta"] },
+            studentName: { type: "string", description: "Presente apenas em GET /confirmacoes (lista)" },
+            studentMatricula: { type: "string" },
+            studentCurso: { type: "string" },
           },
         },
         Ocorrencia: {

@@ -6,20 +6,28 @@ async function findAll({ routeId, date, studentId } = {}) {
 
   if (routeId) {
     params.push(routeId);
-    conditions.push(`rota_id = $${params.length}`);
+    conditions.push(`c.rota_id = $${params.length}`);
   }
   if (date) {
     params.push(date);
-    conditions.push(`data = $${params.length}`);
+    conditions.push(`c.data = $${params.length}`);
   }
   if (studentId) {
     params.push(studentId);
-    conditions.push(`aluno_id = $${params.length}`);
+    conditions.push(`c.aluno_id = $${params.length}`);
   }
 
   const where = conditions.length ? `WHERE ${conditions.join(" AND ")}` : "";
+  // JOIN com usuarios para trazer nome/matrícula/curso do aluno junto —
+  // motorista e administrador não têm acesso a GET /usuarios, então esses
+  // dados precisam vir embutidos aqui (usados na lista de passageiros do
+  // motorista).
   const { rows } = await query(
-    `SELECT * FROM confirmacoes ${where} ORDER BY data DESC`,
+    `SELECT c.*, u.name AS aluno_nome, u.matricula AS aluno_matricula, u.curso AS aluno_curso
+     FROM confirmacoes c
+     JOIN usuarios u ON u.id = c.aluno_id
+     ${where}
+     ORDER BY c.data DESC`,
     params,
   );
   return rows;

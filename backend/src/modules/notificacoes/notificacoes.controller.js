@@ -1,4 +1,5 @@
 const repository = require("./notificacoes.repository");
+const usuariosRepository = require("../usuarios/usuarios.repository");
 const { mapNotificacao } = require("../../utils/serializers");
 const AppError = require("../../utils/AppError");
 
@@ -19,7 +20,23 @@ async function list(req, res, next) {
 
 async function create(req, res, next) {
   try {
-    const notificacao = await repository.create(req.body);
+    let payload = req.body;
+
+    // Motorista só pode avisar os alunos da própria rota: ignoramos qualquer
+    // audience/routeId enviado pelo cliente e usamos a rota vinculada a ele.
+    if (req.user.role === "motorista") {
+      const motorista = await usuariosRepository.findById(req.user.id);
+      if (!motorista?.rota_id) {
+        throw new AppError("Você não está vinculado a nenhuma rota.", 400);
+      }
+      payload = {
+        ...payload,
+        audience: "aluno",
+        routeId: motorista.rota_id,
+      };
+    }
+
+    const notificacao = await repository.create(payload);
     return res.status(201).json(mapNotificacao(notificacao));
   } catch (err) {
     return next(err);
